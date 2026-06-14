@@ -20,6 +20,7 @@
         "close": "Schließen",
         "confirm": "Bestätigen",
         "continue": "Fortsetzen",
+        "loop": "Wiederholen",
         "create": "Erstellen",
         "create_chapters": "Kapitel erstellen",
         "create_entity": "Erstelle {entityType}",
@@ -757,6 +758,10 @@
                     "continue_playlist_default": {
                         "description": "Nächste Szene in der Warteschlange spielen",
                         "heading": "Standardmäßig die Wiedergabeliste fortsetzen"
+                    },
+                    "loop_playlist_default": {
+                        "description": "Wenn die letzte Szene in der Warteschlange endet, mit der ersten Szene fortfahren.",
+                        "heading": "Standardmäßig die Wiedergabeliste wiederholen"
                     },
                     "show_scrubber": "Scrubber anzeigen",
                     "track_activity": "Aktivität verfolgen",

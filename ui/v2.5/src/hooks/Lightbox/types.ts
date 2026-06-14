@@ -30,7 +30,7 @@ export interface ILightboxImage {
   title?: GQL.Maybe<string>;
   rating100?: GQL.Maybe<number>;
   o_counter?: GQL.Maybe<number>;
-  paths: IImagePaths;
+  paths?: GQL.Maybe<IImagePaths>;
   visual_files?: IFiles[];
   galleries?: GQL.Maybe<IGallery[]>;
 }

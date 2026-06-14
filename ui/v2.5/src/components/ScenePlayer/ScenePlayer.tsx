@@ -460,7 +460,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     useEffect(() => {
       if (scene.interactive && interactiveInitialised) {
         interactiveReady.current = false;
-        uploadScript(scene.paths.funscript || "").then(() => {
+        uploadScript(scene.paths?.funscript || "").then(() => {
           interactiveReady.current = true;
         });
       }
@@ -468,7 +468,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       uploadScript,
       interactiveInitialised,
       scene.interactive,
-      scene.paths.funscript,
+      scene.paths?.funscript,
     ]);
 
     // play the script if video started before script upload finished
@@ -677,7 +677,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           }
           sourceSelector.addTextTrack(
             {
-              src: `${scene.paths.caption}?lang=${lang}&type=${caption.caption_type}`,
+              src: `${scene.paths?.caption}?lang=${lang}&type=${caption.caption_type}`,
               kind: "captions",
               srclang: lang,
               label: label,
@@ -716,7 +716,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         _initialTimestamp > 0;
 
       player.ready(() => {
-        player.vttThumbnails().src(scene.paths.vtt ?? null);
+        player.vttThumbnails().src(scene.paths?.vtt ?? null);
 
         if (startPosition) {
           player.currentTime(startPosition);
@@ -792,8 +792,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const player = getPlayer();
       if (!player) return;
 
-      if (scene.paths.screenshot) {
-        player.poster(scene.paths.screenshot);
+      if (scene.paths?.screenshot) {
+        player.poster(scene.paths?.screenshot);
       } else {
         player.poster("");
       }
@@ -899,7 +899,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       if (
         scene.interactive &&
         interactiveClient.handyKey &&
-        currentScript !== scene.paths.funscript
+        currentScript !== scene.paths?.funscript
       ) {
         return;
       }
@@ -931,7 +931,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         .setMetadata(
           scene?.title ?? "Stash",
           scene?.studio?.name ?? performers ?? "Stash",
-          scene.paths.screenshot || ""
+          scene.paths?.screenshot || ""
         );
     }, [getPlayer, scene]);
 

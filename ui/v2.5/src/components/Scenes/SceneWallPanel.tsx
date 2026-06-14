@@ -249,13 +249,15 @@ const SceneWall: React.FC<ISceneWallProps> = ({
   const photos: PhotoProps<IScenePhoto>[] = useMemo(() => {
     return scenes.map((s, index) => {
       const { width, height } = getDimensions(s);
+      const previewPath = s.paths?.preview;
+      const screenshotPath = s.paths?.screenshot;
 
       return {
         scene: s,
         src:
-          s.paths.preview && !erroredImgs[s.id]?.includes(s.paths.preview)
-            ? s.paths.preview!
-            : s.paths.screenshot!,
+          previewPath && !erroredImgs[s.id]?.includes(previewPath)
+            ? previewPath
+            : (screenshotPath ?? ""),
         link: sceneQueue
           ? sceneQueue.makeLink(s.id, { sceneIndex: index })
           : `/scenes/${s.id}`,
@@ -315,7 +317,7 @@ const SceneWall: React.FC<ISceneWallProps> = ({
           onSelectedChanged={
             onSelectChange
               ? (selected, shiftKey) =>
-                  onSelectChange(sceneId, selected, shiftKey)
+                onSelectChange(sceneId, selected, shiftKey)
               : undefined
           }
           selecting={selecting}

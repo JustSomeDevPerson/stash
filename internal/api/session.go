@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -160,5 +161,70 @@ func handleLogout() http.HandlerFunc {
 		} else {
 			http.Redirect(w, r, prefix+"/", http.StatusFound)
 		}
+	}
+}
+
+type sessionRestrictionResponse struct {
+	Restricted bool `json:"restricted"`
+}
+
+type unrestrictRequest struct {
+	Password string `json:"password"`
+}
+
+func handleSessionRestrictionGet() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		restricted, err := manager.GetInstance().SessionStore.IsRestricted(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(sessionRestrictionResponse{Restricted: restricted})
+	}
+}
+
+func handleSessionRestrictPost() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := manager.GetInstance().SessionStore.Restrict(w, r); err != nil {
+			if errors.Is(err, session.ErrUnauthorized) {
+				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				return
+			}
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func handleSessionUnrestrictPost() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req unrestrictRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid request payload", http.StatusBadRequest)
+			return
+		}
+
+		if err := manager.GetInstance().SessionStore.Unrestrict(w, r, req.Password); err != nil {
+			var invalidPassword session.InvalidRestrictedPasswordError
+			if errors.As(err, &invalidPassword) {
+				http.Error(w, "Invalid password", http.StatusUnauthorized)
+				return
+			}
+
+			if errors.Is(err, session.ErrUnauthorized) {
+				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				return
+			}
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

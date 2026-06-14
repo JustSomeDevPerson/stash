@@ -190,6 +190,11 @@ func (rs imageRoutes) ImageCtx(next http.Handler) http.Handler {
 			return
 		}
 
+		if isPathBlockedInRestrictedMode(r.Context(), image.Path) {
+			denyRestrictedPath(w)
+			return
+		}
+
 		ctx := context.WithValue(r.Context(), imageKey, image)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

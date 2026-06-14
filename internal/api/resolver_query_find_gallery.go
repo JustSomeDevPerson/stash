@@ -20,6 +20,10 @@ func (r *queryResolver) FindGallery(ctx context.Context, id string) (ret *models
 		return nil, err
 	}
 
+	if ret != nil && isPathBlockedInRestrictedMode(ctx, ret.Path) {
+		return nil, nil
+	}
+
 	return ret, nil
 }
 
@@ -45,6 +49,9 @@ func (r *queryResolver) FindGalleries(ctx context.Context, galleryFilter *models
 			return err
 		}
 
+		galleries = filterRestrictedGalleries(ctx, galleries)
+		total = len(galleries)
+
 		ret = &FindGalleriesResultType{
 			Count:     total,
 			Galleries: galleries,
@@ -60,10 +67,28 @@ func (r *queryResolver) FindGalleries(ctx context.Context, galleryFilter *models
 func (r *queryResolver) AllGalleries(ctx context.Context) (ret []*models.Gallery, err error) {
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
 		ret, err = r.repository.Gallery.All(ctx)
+		ret = filterRestrictedGalleries(ctx, ret)
 		return err
 	}); err != nil {
 		return nil, err
 	}
 
 	return ret, nil
+}
+
+func filterRestrictedGalleries(ctx context.Context, galleries []*models.Gallery) []*models.Gallery {
+	if !isSessionRestricted(ctx) {
+		return galleries
+	}
+
+	filtered := make([]*models.Gallery, 0, len(galleries))
+	for _, gallery := range galleries {
+		if gallery == nil || isPathBlockedInRestrictedMode(ctx, gallery.Path) {
+			continue
+		}
+
+		filtered = append(filtered, gallery)
+	}
+
+	return filtered
 }

@@ -38,6 +38,10 @@ func (r *queryResolver) FindScene(ctx context.Context, id *string, checksum *str
 		return nil, err
 	}
 
+	if scene != nil && isPathBlockedInRestrictedMode(ctx, scene.Path) {
+		return nil, nil
+	}
+
 	return scene, nil
 }
 
@@ -69,6 +73,10 @@ func (r *queryResolver) FindSceneByHash(ctx context.Context, input SceneHashInpu
 		return nil
 	}); err != nil {
 		return nil, err
+	}
+
+	if scene != nil && isPathBlockedInRestrictedMode(ctx, scene.Path) {
+		return nil, nil
 	}
 
 	return scene, nil
@@ -133,11 +141,19 @@ func (r *queryResolver) FindScenes(
 			return err
 		}
 
+		scenes = filterRestrictedScenes(ctx, scenes)
+
 		ret = &FindScenesResultType{
 			Count:    result.Count,
 			Scenes:   scenes,
 			Duration: result.TotalDuration,
 			Filesize: result.TotalSize,
+		}
+
+		ret.Count = len(ret.Scenes)
+		ret.Duration, ret.Filesize, err = calculateSceneAggregates(ctx, ret.Scenes, r.repository.File)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -188,11 +204,19 @@ func (r *queryResolver) FindScenesByPathRegex(ctx context.Context, filter *model
 			return err
 		}
 
+		scenes = filterRestrictedScenes(ctx, scenes)
+
 		ret = &FindScenesResultType{
 			Count:    result.Count,
 			Scenes:   scenes,
 			Duration: result.TotalDuration,
 			Filesize: result.TotalSize,
+		}
+
+		ret.Count = len(ret.Scenes)
+		ret.Duration, ret.Filesize, err = calculateSceneAggregates(ctx, ret.Scenes, r.repository.File)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -249,10 +273,49 @@ func (r *queryResolver) FindDuplicateScenes(ctx context.Context, distance *int, 
 func (r *queryResolver) AllScenes(ctx context.Context) (ret []*models.Scene, err error) {
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
 		ret, err = r.repository.Scene.All(ctx)
+		ret = filterRestrictedScenes(ctx, ret)
 		return err
 	}); err != nil {
 		return nil, err
 	}
 
 	return ret, nil
+}
+
+func filterRestrictedScenes(ctx context.Context, scenes []*models.Scene) []*models.Scene {
+	if !isSessionRestricted(ctx) {
+		return scenes
+	}
+
+	filtered := make([]*models.Scene, 0, len(scenes))
+	for _, scene := range scenes {
+		if scene == nil || isPathBlockedInRestrictedMode(ctx, scene.Path) {
+			continue
+		}
+
+		filtered = append(filtered, scene)
+	}
+
+	return filtered
+}
+
+func calculateSceneAggregates(ctx context.Context, scenes []*models.Scene, fileReader models.FileReader) (float64, float64, error) {
+	var totalDuration float64
+	var totalSize float64
+
+	for _, scene := range scenes {
+		if err := scene.LoadPrimaryFile(ctx, fileReader); err != nil {
+			return 0, 0, err
+		}
+
+		f := scene.Files.Primary()
+		if f == nil {
+			continue
+		}
+
+		totalDuration += f.Duration
+		totalSize += float64(f.Size)
+	}
+
+	return totalDuration, totalSize, nil
 }

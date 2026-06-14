@@ -11,12 +11,14 @@ type StashConfigInput struct {
 	Path         string `json:"path"`
 	ExcludeVideo bool   `json:"excludeVideo"`
 	ExcludeImage bool   `json:"excludeImage"`
+	Restricted   bool   `json:"restricted"`
 }
 
 type StashConfig struct {
 	Path         string `json:"path"`
 	ExcludeVideo bool   `json:"excludeVideo"`
 	ExcludeImage bool   `json:"excludeImage"`
+	Restricted   bool   `json:"restricted"`
 }
 
 type StashConfigs []*StashConfig
@@ -46,4 +48,19 @@ func (s StashConfigs) Paths() []string {
 		paths[i] = filepath.Clean(c.Path)
 	}
 	return paths
+}
+
+// IsPathRestricted returns true if the provided path is inside any restricted
+// stash path.
+//
+// Restricted paths always take precedence over non-restricted paths, regardless
+// of parent/child path relationships.
+func (s StashConfigs) IsPathRestricted(path string) bool {
+	for _, c := range s {
+		if c.Restricted && fsutil.IsPathInDir(c.Path, path) {
+			return true
+		}
+	}
+
+	return false
 }

@@ -69,7 +69,7 @@ type Scene {
   o_history: [Time!]!
 
   files: [VideoFile!]!
-  paths: ScenePathsType! # Resolver
+  paths: ScenePathsType # Resolver
   scene_markers: [SceneMarker!]!
   galleries: [Gallery!]!
   studio: Studio

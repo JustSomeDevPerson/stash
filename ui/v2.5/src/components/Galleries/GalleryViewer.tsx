@@ -66,7 +66,7 @@ export const GalleryViewer: React.FC<IProps> = ({ galleryId }) => {
 
   images.forEach((image, index) => {
     const imageData = {
-      src: image.paths.thumbnail!,
+      src: image.paths?.thumbnail!,
       width: image.visual_files[0]?.width ?? 0,
       height: image.visual_files[0]?.height ?? 0,
       tabIndex: index,

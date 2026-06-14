@@ -390,7 +390,7 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
                 : {}
             }
             alt={title}
-            src={image.paths.image ?? ""}
+            src={image.paths?.image ?? ""}
           />
         )}
       </div>

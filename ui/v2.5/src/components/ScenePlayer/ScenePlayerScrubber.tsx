@@ -86,7 +86,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     [onSeek, file.duration, scrubWidth]
   );
 
-  const spriteInfo = useSpriteInfo(scene.paths.vtt ?? undefined);
+  const spriteInfo = useSpriteInfo(scene.paths?.vtt ?? undefined);
   const [spriteItems, setSpriteItems] = useState<ISceneSpriteItem[]>();
 
   useEffect(() => {
@@ -327,7 +327,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
   }
 
   function renderSprites() {
-    if (!scene.paths.vtt) return;
+    if (!scene.paths?.vtt) return;
 
     return spriteItems?.map((sprite, index) => {
       return (
@@ -358,8 +358,8 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
           className="scrubber-heatmap"
           style={{
             backgroundImage:
-              scene.interactive_speed && scene.paths.interactive_heatmap
-                ? `url(${scene.paths.interactive_heatmap})`
+              scene.interactive_speed && scene.paths?.interactive_heatmap
+                ? `url(${scene.paths?.interactive_heatmap})`
                 : undefined,
           }}
         />

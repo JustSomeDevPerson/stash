@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"net"
 	"net/http"
@@ -87,6 +88,7 @@ func authenticateHandler() func(http.Handler) http.Handler {
 			if username, ok := authenticateSignedRequest(r); ok {
 				ctx := r.Context()
 				ctx = session.SetCurrentUserID(ctx, username)
+				ctx = context.WithValue(ctx, sessionRestrictedKey, true)
 				r = r.WithContext(ctx)
 				next.ServeHTTP(w, r)
 				return
@@ -155,6 +157,13 @@ func authenticateHandler() func(http.Handler) http.Handler {
 			}
 
 			ctx = session.SetCurrentUserID(ctx, userID)
+
+			restricted, err := manager.GetInstance().SessionStore.IsRestricted(w, r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			ctx = context.WithValue(ctx, sessionRestrictedKey, restricted)
 
 			r = r.WithContext(ctx)
 

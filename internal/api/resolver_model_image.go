@@ -67,6 +67,10 @@ func (r *imageResolver) Files(ctx context.Context, obj *models.Image) ([]*ImageF
 }
 
 func (r *imageResolver) Paths(ctx context.Context, obj *models.Image) (*ImagePathsType, error) {
+	if isPathBlockedInRestrictedMode(ctx, obj.Path) {
+		return nil, nil
+	}
+
 	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
 	builder := urlbuilders.NewImageURLBuilder(baseURL, obj)
 	thumbnailPath := builder.GetThumbnailURL()

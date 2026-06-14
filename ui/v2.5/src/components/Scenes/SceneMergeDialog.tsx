@@ -159,7 +159,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
   );
 
   const [image, setImage] = useState<ScrapeResult<string>>(
-    new ScrapeResult<string>(dest.paths.screenshot)
+    new ScrapeResult<string>(dest.paths?.screenshot)
   );
 
   const [customFields, setCustomFields] = useState<CustomFieldScrapeResults>(
@@ -170,13 +170,13 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
   // uses the first set value for single value fields, and combines all
   useEffect(() => {
     async function loadImages() {
-      const src = sources.find((s) => s.paths.screenshot);
-      if (!dest.paths.screenshot || !src) return;
+      const src = sources.find((s) => s.paths?.screenshot);
+      if (!dest.paths?.screenshot || !src) return;
 
       setLoading(true);
 
-      const destData = await ImageUtils.imageToDataURL(dest.paths.screenshot);
-      const srcData = await ImageUtils.imageToDataURL(src.paths.screenshot!);
+      const destData = await ImageUtils.imageToDataURL(dest.paths?.screenshot);
+      const srcData = await ImageUtils.imageToDataURL(src.paths?.screenshot!);
 
       // keep destination image by default
       const useNewValue = false;
@@ -211,9 +211,9 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
         dest.studio ? idToStoredID(dest.studio) : undefined,
         foundStudio
           ? {
-              stored_id: foundStudio.id,
-              name: foundStudio.name,
-            }
+            stored_id: foundStudio.id,
+            name: foundStudio.name,
+          }
           : undefined,
         !dest.studio
       )
@@ -321,7 +321,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
               new ScrapeResult(
                 dest.custom_fields?.[field],
                 sources.find((s) => s.custom_fields?.[field])?.custom_fields?.[
-                  field
+                field
                 ],
                 dest.custom_fields?.[field] === undefined
               ),
@@ -441,7 +441,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <FormControl
               value={oCounter.originalValue ?? 0}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }
@@ -449,7 +449,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <FormControl
               value={oCounter.newValue ?? 0}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }
@@ -463,7 +463,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <FormControl
               value={playCount.originalValue ?? 0}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }
@@ -471,7 +471,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <FormControl
               value={playCount.newValue ?? 0}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }
@@ -487,7 +487,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
                 playDuration.originalValue ?? 0
               )}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }
@@ -495,7 +495,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <FormControl
               value={TextUtils.secondsToTimestamp(playDuration.newValue ?? 0)}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }
@@ -509,7 +509,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <GallerySelect
               className="form-control react-select"
               ids={galleries.originalValue ?? []}
-              onSelect={() => {}}
+              onSelect={() => { }}
               isMulti
               isDisabled
             />
@@ -518,7 +518,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <GallerySelect
               className="form-control react-select"
               ids={galleries.newValue ?? []}
-              onSelect={() => {}}
+              onSelect={() => { }}
               isMulti
               isDisabled
             />
@@ -564,7 +564,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <FormControl
               value={organized.originalValue ? trueString : falseString}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }
@@ -572,7 +572,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
             <FormControl
               value={organized.newValue ? trueString : falseString}
               readOnly
-              onChange={() => {}}
+              onChange={() => { }}
               className="bg-secondary text-white border-secondary"
             />
           }

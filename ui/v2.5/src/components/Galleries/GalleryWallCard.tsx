@@ -50,7 +50,7 @@ const GalleryWallCard: React.FC<IProps> = ({
     onSelectedChanged: onSelectedChanged,
   });
 
-  const cover = gallery?.paths.cover;
+  const cover = gallery?.paths?.cover;
 
   function onCoverLoad(e: React.SyntheticEvent<HTMLImageElement, Event>) {
     const target = e.target as HTMLImageElement;
@@ -151,7 +151,7 @@ const GalleryWallCard: React.FC<IProps> = ({
           </Link>
         </footer>
         <GalleryPreviewScrubber
-          previewPath={gallery.paths.preview}
+          previewPath={gallery.paths?.preview ?? ""}
           defaultPath={cover ?? ""}
           imageCount={gallery.image_count}
           onClick={(i) => {

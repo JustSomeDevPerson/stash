@@ -42,7 +42,9 @@ const (
 	ApiKey              = "api_key"
 	Username            = "username"
 	Password            = "password"
+	RestrictedPassword  = "restricted_session_password"
 	MaxSessionAge       = "max_session_age"
+	RestrictedTimeout   = "restricted_session_timeout"
 
 	SignedURLExpiry        = "signed_url_expiry"
 	signedURLExpiryDefault = 60 * 60 * 4 // 4 hours in seconds
@@ -56,6 +58,7 @@ const (
 	BlobsStorage = "blobs_storage"
 
 	DefaultMaxSessionAge = 60 * 60 * 1 // 1 hours
+	defaultRestrictedSessionTimeout = 60 * 5 // 5 minutes
 
 	Database = "database"
 
@@ -491,6 +494,14 @@ func (i *Config) SetPassword(value string) {
 		i.SetString(Password, "")
 	} else {
 		i.SetString(Password, hashPassword(value))
+	}
+}
+
+func (i *Config) SetRestrictedPassword(value string) {
+	if value == "" {
+		i.SetString(RestrictedPassword, "")
+	} else {
+		i.SetString(RestrictedPassword, hashPassword(value))
 	}
 }
 
@@ -1148,6 +1159,10 @@ func (i *Config) GetPasswordHash() string {
 	return i.getString(Password)
 }
 
+func (i *Config) GetRestrictedPasswordHash() string {
+	return i.getString(RestrictedPassword)
+}
+
 func (i *Config) GetCredentials() (string, string) {
 	if i.HasCredentials() {
 		return i.getString(Username), i.getString(Password)
@@ -1180,6 +1195,19 @@ func (i *Config) ValidateCredentials(username string, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(authPWHash), []byte(password))
 
 	return username == authUser && err == nil
+}
+
+func (i *Config) ValidateRestrictedPassword(password string) bool {
+	if password == "" {
+		return false
+	}
+
+	hash := i.GetRestrictedPasswordHash()
+	if hash == "" {
+		return false
+	}
+
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
 func stashBoxValidate(str string) bool {
@@ -1229,6 +1257,19 @@ func (i *Config) GetMaxSessionAge() int {
 	v := i.forKey(MaxSessionAge)
 	if v.Exists(MaxSessionAge) {
 		ret = v.Int(MaxSessionAge)
+	}
+
+	return ret
+}
+
+func (i *Config) GetRestrictedSessionTimeout() int {
+	i.RLock()
+	defer i.RUnlock()
+
+	ret := defaultRestrictedSessionTimeout
+	v := i.forKey(RestrictedTimeout)
+	if v.Exists(RestrictedTimeout) {
+		ret = v.Int(RestrictedTimeout)
 	}
 
 	return ret

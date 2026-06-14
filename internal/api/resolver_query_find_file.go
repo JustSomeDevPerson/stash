@@ -42,6 +42,10 @@ func (r *queryResolver) FindFile(ctx context.Context, id *string, path *string) 
 		return nil, err
 	}
 
+	if ret != nil && isPathBlockedInRestrictedMode(ctx, ret.Base().Path) {
+		return nil, nil
+	}
+
 	return convertBaseFile(ret), nil
 }
 
@@ -103,12 +107,25 @@ func (r *queryResolver) FindFiles(
 			return err
 		}
 
+		files = filterRestrictedFiles(ctx, files)
+
 		ret = &FindFilesResultType{
-			Count:      result.Count,
+			Count:      len(files),
 			Files:      convertBaseFiles(files),
-			Duration:   result.TotalDuration,
-			Megapixels: result.Megapixels,
-			Size:       int(result.TotalSize),
+			Duration:   0,
+			Megapixels: 0,
+			Size:       0,
+		}
+
+		for _, f := range files {
+			if asVideo, ok := f.(*models.VideoFile); ok {
+				ret.Duration += asVideo.Duration
+			}
+			if asImage, ok := f.(*models.ImageFile); ok {
+				ret.Megapixels += asImage.Megapixels()
+			}
+
+			ret.Size += int(f.Base().Size)
 		}
 
 		return nil
@@ -117,4 +134,21 @@ func (r *queryResolver) FindFiles(
 	}
 
 	return ret, nil
+}
+
+func filterRestrictedFiles(ctx context.Context, files []models.File) []models.File {
+	if !isSessionRestricted(ctx) {
+		return files
+	}
+
+	filtered := make([]models.File, 0, len(files))
+	for _, f := range files {
+		if f == nil || isPathBlockedInRestrictedMode(ctx, f.Base().Path) {
+			continue
+		}
+
+		filtered = append(filtered, f)
+	}
+
+	return filtered
 }

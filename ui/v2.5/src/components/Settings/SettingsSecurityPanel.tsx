@@ -11,7 +11,7 @@ import { useGenerateAPIKey } from "src/core/StashService";
 
 type AuthenticationSettingsInput = Pick<
   GQL.ConfigGeneralInput,
-  "username" | "password"
+  "username" | "password" | "restrictedSessionPassword"
 >;
 
 interface IAuthenticationInput {
@@ -33,6 +33,7 @@ const AuthenticationInput: React.FC<IAuthenticationInput> = ({
   }
 
   const { username, password } = value;
+  const restrictedSessionPassword = value.restrictedSessionPassword;
 
   return (
     <div>
@@ -61,6 +62,20 @@ const AuthenticationInput: React.FC<IAuthenticationInput> = ({
         />
         <Form.Text className="text-muted">
           {intl.formatMessage({ id: "config.general.auth.password_desc" })}
+        </Form.Text>
+      </Form.Group>
+      <Form.Group id="restrictedSessionPassword">
+        <h6>Restricted Session Password</h6>
+        <Form.Control
+          className="text-input"
+          type="password"
+          value={restrictedSessionPassword ?? ""}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            set({ restrictedSessionPassword: e.currentTarget.value })
+          }
+        />
+        <Form.Text className="text-muted">
+          Additional password used by the navbar Unrestrict button. It must be different from the user password.
         </Form.Text>
       </Form.Group>
     </div>
@@ -116,6 +131,7 @@ export const SettingsSecurityPanel: React.FC = () => {
         value={{
           username: general.username,
           password: general.password,
+          restrictedSessionPassword: general.restrictedSessionPassword,
         }}
         onChange={(v) => saveGeneral(v)}
         renderField={(value, setValue) => (
@@ -161,6 +177,14 @@ export const SettingsSecurityPanel: React.FC = () => {
         subHeadingID="config.general.auth.maximum_session_age_desc"
         value={general.maxSessionAge ?? undefined}
         onChange={(v) => saveGeneral({ maxSessionAge: v })}
+      />
+
+      <NumberSetting
+        id="restrictedSessionTimeout"
+        heading="Restricted Session Timeout (seconds)"
+        subHeading="Inactivity duration before an unrestricted session is automatically restricted again."
+        value={general.restrictedSessionTimeout ?? undefined}
+        onChange={(v) => saveGeneral({ restrictedSessionTimeout: v })}
       />
     </SettingSection>
   );

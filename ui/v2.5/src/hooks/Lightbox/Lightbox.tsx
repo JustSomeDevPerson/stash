@@ -473,14 +473,14 @@ export const LightboxComponent: React.FC<IProps> = ({
   }
 
   const navItems = images.map((image, i) =>
-    React.createElement(image.paths.preview !== "" ? "video" : "img", {
-      loop: image.paths.preview !== "",
-      autoPlay: image.paths.preview !== "",
-      playsInline: image.paths.preview !== "",
+    React.createElement((image.paths?.preview ?? "") !== "" ? "video" : "img", {
+      loop: (image.paths?.preview ?? "") !== "",
+      autoPlay: (image.paths?.preview ?? "") !== "",
+      playsInline: (image.paths?.preview ?? "") !== "",
       src:
-        image.paths.preview !== ""
-          ? (image.paths.preview ?? "")
-          : (image.paths.thumbnail ?? ""),
+        (image.paths?.preview ?? "") !== ""
+          ? (image.paths?.preview ?? "")
+          : (image.paths?.thumbnail ?? ""),
       alt: "",
       className: cx(CLASSNAME_NAVIMAGE, {
         [CLASSNAME_NAVSELECTED]: i === index,
@@ -488,7 +488,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       onClick: (e: React.MouseEvent) => selectIndex(e, i),
       role: "presentation",
       loading: "lazy",
-      key: image.paths.thumbnail,
+      key: image.paths?.thumbnail,
       onLoad: imageLoaded,
     })
   );
@@ -758,9 +758,9 @@ export const LightboxComponent: React.FC<IProps> = ({
     const pageHeader =
       page && pages
         ? intl.formatMessage(
-            { id: "dialogs.lightbox.page_header" },
-            { page, total: pages }
-          )
+          { id: "dialogs.lightbox.page_header" },
+          { page, total: pages }
+        )
         : "";
 
     return (
@@ -772,9 +772,8 @@ export const LightboxComponent: React.FC<IProps> = ({
               {chapterHeader()} {pageHeader}
             </span>
             {images.length > 1 ? (
-              <b ref={indicatorRef}>{`${currentIndex + 1} / ${
-                images.length
-              }`}</b>
+              <b ref={indicatorRef}>{`${currentIndex + 1} / ${images.length
+                }`}</b>
             ) : undefined}
           </div>
           <div className={CLASSNAME_RIGHT}>
@@ -876,10 +875,10 @@ export const LightboxComponent: React.FC<IProps> = ({
             ref={carouselRef}
           >
             {images.map((image, i) => (
-              <div className={`${CLASSNAME_IMAGE}`} key={image.paths.image}>
+              <div className={`${CLASSNAME_IMAGE}`} key={image.paths?.image}>
                 {i >= currentIndex - 1 && i <= currentIndex + 1 ? (
                   <LightboxImage
-                    src={image.paths.image ?? ""}
+                    src={image.paths?.image ?? ""}
                     width={image.visual_files?.[0]?.width ?? 0}
                     height={image.visual_files?.[0]?.height ?? 0}
                     displayMode={displayMode}

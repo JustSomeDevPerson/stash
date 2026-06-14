@@ -47,7 +47,7 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
           loading="lazy"
           alt={title}
           className="image-thumbnail"
-          src={gallery.paths.cover}
+          src={gallery.paths?.cover}
         />
       </Link>
     );

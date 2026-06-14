@@ -153,6 +153,11 @@ func (rs galleryRoutes) GalleryCtx(next http.Handler) http.Handler {
 			return
 		}
 
+		if isPathBlockedInRestrictedMode(r.Context(), gallery.Path) {
+			denyRestrictedPath(w)
+			return
+		}
+
 		ctx := context.WithValue(r.Context(), galleryKey, gallery)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

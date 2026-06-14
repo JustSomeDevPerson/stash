@@ -106,6 +106,10 @@ func (r *sceneResolver) Rating100(ctx context.Context, obj *models.Scene) (*int,
 }
 
 func (r *sceneResolver) Paths(ctx context.Context, obj *models.Scene) (*ScenePathsType, error) {
+	if isPathBlockedInRestrictedMode(ctx, obj.Path) {
+		return nil, nil
+	}
+
 	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
 	config := manager.GetInstance().Config
 	builder := urlbuilders.NewSceneURLBuilder(baseURL, obj)

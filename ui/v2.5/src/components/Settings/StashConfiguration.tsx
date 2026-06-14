@@ -36,7 +36,7 @@ const Stash: React.FC<IStashProps> = ({
 
   return (
     <Row className={`stash-row align-items-center ${classAdd}`}>
-      <Form.Label column md={7}>
+      <Form.Label column md={5}>
         {stash.path}
       </Form.Label>
       <Col md={2} xs={4} className="col form-label">
@@ -63,6 +63,16 @@ const Stash: React.FC<IStashProps> = ({
             id={`stash-exclude-image-${index}`}
             checked={!stash.excludeImage}
             onChange={(v) => handleInput("excludeImage", !v)}
+          />
+        </div>
+      </Col>
+      <Col md={2} xs={4} className="col-form-label">
+        <div>
+          <h6 className="d-md-none">Restricted</h6>
+          <BooleanSetting
+            id={`stash-restricted-${index}`}
+            checked={stash.restricted}
+            onChange={(v) => handleInput("restricted", v)}
           />
         </div>
       </Col>
@@ -128,6 +138,7 @@ const StashConfiguration: React.FC<IStashConfigurationProps> = ({
                   path: v,
                   excludeVideo: false,
                   excludeImage: false,
+                  restricted: false,
                 },
               ]);
             setIsCreating(false);
@@ -159,7 +170,7 @@ const StashConfiguration: React.FC<IStashConfigurationProps> = ({
       <div className="content" id="stash-table">
         {stashes.length > 0 && (
           <Row className="d-none d-md-flex">
-            <h6 className="col-md-7">
+            <h6 className="col-md-5">
               <FormattedMessage id="path" />
             </h6>
             <h6 className="col-md-2 col-4">
@@ -168,6 +179,7 @@ const StashConfiguration: React.FC<IStashConfigurationProps> = ({
             <h6 className="col-md-2 col-4">
               <FormattedMessage id="images" />
             </h6>
+            <h6 className="col-md-2">Restricted</h6>
           </Row>
         )}
         {stashes.map((stash, index) => (

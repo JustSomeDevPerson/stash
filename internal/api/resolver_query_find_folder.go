@@ -37,6 +37,10 @@ func (r *queryResolver) FindFolder(ctx context.Context, id *string, path *string
 		return nil, err
 	}
 
+	if ret != nil && isPathBlockedInRestrictedMode(ctx, ret.Path) {
+		return nil, nil
+	}
+
 	return ret, nil
 }
 
@@ -85,8 +89,10 @@ func (r *queryResolver) FindFolders(
 			return err
 		}
 
+		folders = filterRestrictedFolders(ctx, folders)
+
 		ret = &FindFoldersResultType{
-			Count:   result.Count,
+			Count:   len(folders),
 			Folders: folders,
 		}
 
@@ -96,4 +102,21 @@ func (r *queryResolver) FindFolders(
 	}
 
 	return ret, nil
+}
+
+func filterRestrictedFolders(ctx context.Context, folders []*models.Folder) []*models.Folder {
+	if !isSessionRestricted(ctx) {
+		return folders
+	}
+
+	filtered := make([]*models.Folder, 0, len(folders))
+	for _, folder := range folders {
+		if folder == nil || isPathBlockedInRestrictedMode(ctx, folder.Path) {
+			continue
+		}
+
+		filtered = append(filtered, folder)
+	}
+
+	return filtered
 }

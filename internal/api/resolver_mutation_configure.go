@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/stashapp/stash/internal/manager"
 	"github.com/stashapp/stash/internal/manager/config"
 	"github.com/stashapp/stash/internal/manager/task"
@@ -335,6 +337,10 @@ func (r *mutationResolver) ConfigureGeneral(ctx context.Context, input ConfigGen
 		currentPWHash := c.GetPasswordHash()
 
 		if *input.Password != currentPWHash {
+			if c.GetRestrictedPasswordHash() != "" && bcrypt.CompareHashAndPassword([]byte(c.GetRestrictedPasswordHash()), []byte(*input.Password)) == nil {
+				return makeConfigGeneralResult(), errors.New("restricted session password must be different from the user password")
+			}
+
 			if *input.Password == "" {
 				logger.Info("Password cleared")
 			} else {
@@ -344,7 +350,25 @@ func (r *mutationResolver) ConfigureGeneral(ctx context.Context, input ConfigGen
 		}
 	}
 
+	if input.RestrictedSessionPassword != nil {
+		currentPWHash := c.GetRestrictedPasswordHash()
+
+		if *input.RestrictedSessionPassword != currentPWHash {
+			if *input.RestrictedSessionPassword != "" && c.HasCredentials() && c.ValidateCredentials(c.GetUsername(), *input.RestrictedSessionPassword) {
+				return makeConfigGeneralResult(), errors.New("restricted session password must be different from the user password")
+			}
+
+			if *input.RestrictedSessionPassword == "" {
+				logger.Info("Restricted session password cleared")
+			} else {
+				logger.Info("Restricted session password changed")
+			}
+			c.SetRestrictedPassword(*input.RestrictedSessionPassword)
+		}
+	}
+
 	r.setConfigInt(config.MaxSessionAge, input.MaxSessionAge)
+	r.setConfigInt(config.RestrictedTimeout, input.RestrictedSessionTimeout)
 	r.setConfigString(config.LogFile, input.LogFile)
 	r.setConfigBool(config.LogOut, input.LogOut)
 	r.setConfigBool(config.LogAccess, input.LogAccess)

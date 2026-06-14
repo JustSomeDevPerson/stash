@@ -98,7 +98,7 @@ export const QueueViewer: React.FC<IPlaylistViewer> = ({
               <img
                 loading="lazy"
                 alt={scene.title ?? ""}
-                src={scene.paths.screenshot ?? ""}
+                src={scene.paths?.screenshot ?? ""}
               />
             </div>
             <div className="queue-scene-details">

@@ -31,7 +31,7 @@ type Gallery {
 
   cover: Image
 
-  paths: GalleryPathsType! # Resolver
+  paths: GalleryPathsType # Resolver
   custom_fields: Map!
   image(index: Int!): Image!
 }

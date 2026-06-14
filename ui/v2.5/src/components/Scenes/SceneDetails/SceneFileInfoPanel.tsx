@@ -207,8 +207,8 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
       return (
         <URLField
           name="Funscript"
-          url={props.scene.paths.funscript}
-          value={props.scene.paths.funscript}
+          url={props.scene.paths?.funscript}
+          value={props.scene.paths?.funscript}
           truncate
         />
       );
@@ -292,8 +292,8 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
         {props.scene.files.length > 0 && (
           <URLField
             id="media_info.stream"
-            url={props.scene.paths.stream}
-            value={props.scene.paths.stream}
+            url={props.scene.paths?.stream}
+            value={props.scene.paths?.stream}
             truncate
           />
         )}

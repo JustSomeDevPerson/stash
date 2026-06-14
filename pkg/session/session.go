@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/stashapp/stash/pkg/logger"
@@ -21,6 +22,8 @@ const (
 const (
 	userIDKey             = "userID"
 	visitedPluginHooksKey = "visitedPluginsHooks"
+	restrictedKey         = "restricted"
+	unrestrictedAtKey     = "unrestrictedAt"
 )
 
 const (
@@ -44,6 +47,12 @@ func (e InvalidCredentialsError) Error() string {
 }
 
 var ErrUnauthorized = errors.New("unauthorized")
+
+type InvalidRestrictedPasswordError struct{}
+
+func (e InvalidRestrictedPasswordError) Error() string {
+	return "invalid restricted password"
+}
 
 type Store struct {
 	sessionStore *sessions.CookieStore
@@ -78,6 +87,8 @@ func (s *Store) Login(w http.ResponseWriter, r *http.Request) error {
 	logger.Info("User logged in")
 
 	newSession.Values[userIDKey] = username
+	newSession.Values[restrictedKey] = true
+	delete(newSession.Values, unrestrictedAtKey)
 
 	err := newSession.Save(r, w)
 	if err != nil {
@@ -117,6 +128,7 @@ func (s *Store) GetSessionUserID(w http.ResponseWriter, r *http.Request) (string
 
 	if !session.IsNew {
 		val := session.Values[userIDKey]
+		s.applyRestrictedTimeout(session)
 
 		// refresh the cookie
 		err = session.Save(r, w)
@@ -130,6 +142,104 @@ func (s *Store) GetSessionUserID(w http.ResponseWriter, r *http.Request) (string
 	}
 
 	return "", nil
+}
+
+func (s *Store) applyRestrictedTimeout(session *sessions.Session) {
+	restricted, ok := session.Values[restrictedKey].(bool)
+	if !ok {
+		session.Values[restrictedKey] = true
+		delete(session.Values, unrestrictedAtKey)
+		return
+	}
+
+	if restricted {
+		delete(session.Values, unrestrictedAtKey)
+		return
+	}
+
+	v, ok := session.Values[unrestrictedAtKey].(int64)
+	if !ok {
+		session.Values[restrictedKey] = true
+		delete(session.Values, unrestrictedAtKey)
+		return
+	}
+
+	now := time.Now().Unix()
+	timeout := int64(s.config.GetRestrictedSessionTimeout())
+	if timeout > 0 && now-v >= timeout {
+		session.Values[restrictedKey] = true
+		delete(session.Values, unrestrictedAtKey)
+		return
+	}
+
+	session.Values[unrestrictedAtKey] = now
+}
+
+func (s *Store) IsRestricted(w http.ResponseWriter, r *http.Request) (bool, error) {
+	session, err := s.sessionStore.Get(r, cookieName)
+	if err != nil {
+		return true, nil
+	}
+
+	if session.IsNew {
+		session.Values[restrictedKey] = true
+		delete(session.Values, unrestrictedAtKey)
+		if err := session.Save(r, w); err != nil {
+			return true, err
+		}
+		return true, nil
+	}
+
+	s.applyRestrictedTimeout(session)
+
+	restricted, ok := session.Values[restrictedKey].(bool)
+	if !ok {
+		restricted = true
+		session.Values[restrictedKey] = true
+		delete(session.Values, unrestrictedAtKey)
+	}
+
+	if err := session.Save(r, w); err != nil {
+		return true, err
+	}
+
+	return restricted, nil
+}
+
+func (s *Store) Restrict(w http.ResponseWriter, r *http.Request) error {
+	session, err := s.sessionStore.Get(r, cookieName)
+	if err != nil {
+		return err
+	}
+
+	if session.IsNew {
+		return ErrUnauthorized
+	}
+
+	session.Values[restrictedKey] = true
+	delete(session.Values, unrestrictedAtKey)
+
+	return session.Save(r, w)
+}
+
+func (s *Store) Unrestrict(w http.ResponseWriter, r *http.Request, password string) error {
+	if !s.config.ValidateRestrictedPassword(password) {
+		return InvalidRestrictedPasswordError{}
+	}
+
+	session, err := s.sessionStore.Get(r, cookieName)
+	if err != nil {
+		return err
+	}
+
+	if session.IsNew {
+		return ErrUnauthorized
+	}
+
+	session.Values[restrictedKey] = false
+	session.Values[unrestrictedAtKey] = time.Now().Unix()
+
+	return session.Save(r, w)
 }
 
 func SetCurrentUserID(ctx context.Context, userID string) context.Context {

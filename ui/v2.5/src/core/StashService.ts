@@ -1705,10 +1705,10 @@ export const mutateAddGalleryImages = (input: GQL.GalleryAddInput) =>
 function evictCover(cache: ApolloCache<GQL.Gallery>, gallery_id: string) {
   const fields: Partial<Pick<Modifiers<GQL.Gallery>, "paths" | "cover">> = {};
   fields.paths = (paths) => {
-    if (!("cover" in paths)) {
+    if (!paths || !("cover" in paths)) {
       return paths;
     }
-    const coverUrl = new URL(paths.cover);
+    const coverUrl = new URL(paths.cover ?? "");
     coverUrl.search = "?t=" + Math.floor(Date.now() / 1000);
     return { ...paths, cover: coverUrl.toString() };
   };

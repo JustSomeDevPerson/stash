@@ -193,6 +193,10 @@ func (r *galleryResolver) Urls(ctx context.Context, obj *models.Gallery) ([]stri
 }
 
 func (r *galleryResolver) Paths(ctx context.Context, obj *models.Gallery) (*GalleryPathsType, error) {
+	if isPathBlockedInRestrictedMode(ctx, obj.Path) {
+		return nil, nil
+	}
+
 	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
 	builder := urlbuilders.NewGalleryURLBuilder(baseURL, obj)
 

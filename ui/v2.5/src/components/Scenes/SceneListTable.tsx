@@ -54,7 +54,7 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
           loading="lazy"
           className="image-thumbnail"
           alt={title}
-          src={scene.paths.screenshot ?? ""}
+          src={scene.paths?.screenshot ?? ""}
         />
       </Link>
     );

@@ -114,9 +114,9 @@ const ImageWall: React.FC<IImageWallProps> = ({
   images.forEach((image, index) => {
     const imageData = {
       src:
-        image.paths.preview !== ""
-          ? image.paths.preview!
-          : image.paths.thumbnail!,
+        image.paths?.preview !== ""
+          ? image.paths?.preview!
+          : image.paths?.thumbnail!,
       width: image.visual_files?.[0]?.width ?? 0,
       height: image.visual_files?.[0]?.height ?? 0,
       tabIndex: index,

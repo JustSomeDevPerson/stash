@@ -43,6 +43,10 @@ func (r *queryResolver) FindImage(ctx context.Context, id *string, checksum *str
 		return nil, err
 	}
 
+	if image != nil && isPathBlockedInRestrictedMode(ctx, image.Path) {
+		return nil, nil
+	}
+
 	return image, nil
 }
 
@@ -109,11 +113,19 @@ func (r *queryResolver) FindImages(
 			return err
 		}
 
+		images = filterRestrictedImages(ctx, images)
+
 		ret = &FindImagesResultType{
 			Count:      result.Count,
 			Images:     images,
 			Megapixels: result.Megapixels,
 			Filesize:   result.TotalSize,
+		}
+
+		ret.Count = len(ret.Images)
+		ret.Megapixels, ret.Filesize, err = calculateImageAggregates(ctx, ret.Images, r.repository.File)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -127,10 +139,54 @@ func (r *queryResolver) FindImages(
 func (r *queryResolver) AllImages(ctx context.Context) (ret []*models.Image, err error) {
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
 		ret, err = r.repository.Image.All(ctx)
+		ret = filterRestrictedImages(ctx, ret)
 		return err
 	}); err != nil {
 		return nil, err
 	}
 
 	return ret, nil
+}
+
+func filterRestrictedImages(ctx context.Context, images []*models.Image) []*models.Image {
+	if !isSessionRestricted(ctx) {
+		return images
+	}
+
+	filtered := make([]*models.Image, 0, len(images))
+	for _, image := range images {
+		if image == nil || isPathBlockedInRestrictedMode(ctx, image.Path) {
+			continue
+		}
+
+		filtered = append(filtered, image)
+	}
+
+	return filtered
+}
+
+func calculateImageAggregates(ctx context.Context, images []*models.Image, fileReader models.FileReader) (float64, float64, error) {
+	var megapixels float64
+	var totalSize float64
+
+	for _, image := range images {
+		if err := image.LoadPrimaryFile(ctx, fileReader); err != nil {
+			return 0, 0, err
+		}
+
+		f := image.Files.Primary()
+		if f == nil {
+			continue
+		}
+
+		imageFile, ok := f.(*models.ImageFile)
+		if !ok {
+			continue
+		}
+
+		megapixels += float64(imageFile.Width*imageFile.Height) / float64(1000000)
+		totalSize += float64(f.Base().Size)
+	}
+
+	return megapixels, totalSize, nil
 }

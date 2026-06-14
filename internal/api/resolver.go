@@ -166,6 +166,7 @@ func (r *queryResolver) MarkerWall(ctx context.Context, q *string) (ret []*model
 func (r *queryResolver) SceneWall(ctx context.Context, q *string) (ret []*models.Scene, err error) {
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
 		ret, err = r.repository.Scene.Wall(ctx, q)
+		ret = filterRestrictedScenes(ctx, ret)
 		return err
 	}); err != nil {
 		return nil, err

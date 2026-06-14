@@ -40,7 +40,7 @@ import { filterByStashID } from "src/models/list-filter/utils";
 export type Scene = Pick<GQL.Scene, "id" | "title" | "date" | "code"> & {
   studio?: Pick<GQL.Studio, "name"> | null;
   files?: Pick<GQL.VideoFile, "path">[];
-  paths?: Pick<GQL.ScenePathsType, "screenshot">;
+  paths?: Pick<GQL.ScenePathsType, "screenshot"> | null;
 };
 
 type Option = SelectOption<Scene>;
@@ -140,7 +140,7 @@ const _SceneSelect: React.FC<
             {object.paths?.screenshot && (
               <img
                 className="scene-select-image"
-                src={object.paths.screenshot}
+                src={object.paths?.screenshot ?? ""}
                 loading="lazy"
               />
             )}

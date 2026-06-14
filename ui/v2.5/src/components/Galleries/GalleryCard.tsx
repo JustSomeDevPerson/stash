@@ -30,7 +30,7 @@ export const GalleryPreview: React.FC<IGalleryPreviewProps> = ({
   disabled,
 }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(
-    gallery.paths.cover ?? undefined
+    gallery.paths?.cover ?? undefined
   );
 
   return (
@@ -45,8 +45,8 @@ export const GalleryPreview: React.FC<IGalleryPreviewProps> = ({
       )}
       {gallery.image_count > 0 && (
         <GalleryPreviewScrubber
-          previewPath={gallery.paths.preview}
-          defaultPath={gallery.paths.cover ?? ""}
+          previewPath={gallery.paths?.preview ?? ""}
+          defaultPath={gallery.paths?.cover ?? ""}
           imageCount={gallery.image_count}
           onClick={onScrubberClick}
           onPathChanged={setImgSrc}

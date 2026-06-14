@@ -130,9 +130,9 @@ export const WallItem = <T extends WallItemType>({
       case "scene": {
         const scene = data as GQL.SlimSceneDataFragment;
         return {
-          video: scene.paths.preview ?? undefined,
-          animation: scene.paths.webp ?? undefined,
-          image: scene.paths.screenshot ?? undefined,
+          video: scene.paths?.preview ?? undefined,
+          animation: scene.paths?.webp ?? undefined,
+          image: scene.paths?.screenshot ?? undefined,
         };
       }
       case "sceneMarker": {
@@ -146,7 +146,7 @@ export const WallItem = <T extends WallItemType>({
       case "image": {
         const image = data as GQL.SlimImageDataFragment;
         return {
-          image: image.paths.thumbnail ?? undefined,
+          image: image.paths?.thumbnail ?? undefined,
         };
       }
       default:

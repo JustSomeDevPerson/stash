@@ -13,5 +13,7 @@ type SessionConfig interface {
 
 	GetSessionStoreKey() []byte
 	GetMaxSessionAge() int
+	GetRestrictedSessionTimeout() int
 	ValidateCredentials(username string, password string) bool
+	ValidateRestrictedPassword(password string) bool
 }

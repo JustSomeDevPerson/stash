@@ -3,6 +3,7 @@ fragment ConfigGeneralData on ConfigGeneralResult {
     path
     excludeVideo
     excludeImage
+    restricted
   }
   databasePath
   backupDirectoryPath
@@ -33,7 +34,9 @@ fragment ConfigGeneralData on ConfigGeneralResult {
   apiKey
   username
   password
+  restrictedSessionPassword
   maxSessionAge
+  restrictedSessionTimeout
   logFile
   logOut
   logLevel

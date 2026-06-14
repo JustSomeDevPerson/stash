@@ -430,12 +430,12 @@ const SceneCardImage = PatchComponent(
     return (
       <>
         <ScenePreview
-          image={props.scene.paths.screenshot ?? undefined}
-          video={props.scene.paths.preview ?? undefined}
+          image={props.scene.paths?.screenshot ?? undefined}
+          video={props.scene.paths?.preview ?? undefined}
           isPortrait={isPortrait()}
           soundActive={configuration?.interface?.soundOnPreview ?? false}
           volume={configuration?.ui.previewVolume ?? defaultPreviewVolume}
-          vttPath={props.scene.paths.vtt ?? undefined}
+          vttPath={props.scene.paths?.vtt ?? undefined}
           onScrubberClick={onScrubberClick}
           disabled={props.selecting}
         />
@@ -494,7 +494,7 @@ export const SceneCard = PatchComponent(
         duration={file?.duration ?? undefined}
         interactiveHeatmap={
           props.scene.interactive_speed
-            ? (props.scene.paths.interactive_heatmap ?? undefined)
+            ? (props.scene.paths?.interactive_heatmap ?? undefined)
             : undefined
         }
         image={<SceneCardImage {...props} />}

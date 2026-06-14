@@ -868,7 +868,7 @@ export const SceneDuplicateChecker: React.FC = () => {
                         <HoverPopover
                           content={
                             <img
-                              src={scene.paths.sprite ?? ""}
+                              src={scene.paths?.sprite ?? ""}
                               alt=""
                               width={600}
                             />
@@ -876,7 +876,7 @@ export const SceneDuplicateChecker: React.FC = () => {
                           placement="right"
                         >
                           <img
-                            src={scene.paths.sprite ?? ""}
+                            src={scene.paths?.sprite ?? ""}
                             alt=""
                             width={100}
                             style={{

@@ -230,6 +230,9 @@ func Initialize() (*Server, error) {
 	r.Get(loginEndpoint, handleLogin())
 	r.Post(loginEndpoint, handleLoginPost())
 	r.Get(logoutEndpoint, handleLogout())
+	r.Get("/session/restriction", handleSessionRestrictionGet())
+	r.Post("/session/restrict", handleSessionRestrictPost())
+	r.Post("/session/unrestrict", handleSessionUnrestrictPost())
 	r.Get(loginLocaleEndpoint, handleLoginLocale(cfg))
 	r.HandleFunc(loginEndpoint+"/*", func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = strings.TrimPrefix(r.URL.Path, loginEndpoint)

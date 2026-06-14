@@ -596,6 +596,11 @@ func (rs sceneRoutes) SceneCtx(next http.Handler) http.Handler {
 			return
 		}
 
+		if isPathBlockedInRestrictedMode(r.Context(), scene.Path) {
+			denyRestrictedPath(w)
+			return
+		}
+
 		ctx := context.WithValue(r.Context(), sceneKey, scene)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

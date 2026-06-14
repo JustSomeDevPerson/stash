@@ -147,8 +147,12 @@ input ConfigGeneralInput {
   username: String
   "Password"
   password: String
+  "Additional password used to unrestrict a restricted session"
+  restrictedSessionPassword: String
   "Maximum session cookie age"
   maxSessionAge: Int
+  "Inactivity timeout before an unrestricted session becomes restricted again"
+  restrictedSessionTimeout: Int
   "Name of the log file"
   logFile: String
   "Whether to also output to stderr"
@@ -287,8 +291,12 @@ type ConfigGeneralResult {
   username: String!
   "Password"
   password: String!
+  "Additional password used to unrestrict a restricted session"
+  restrictedSessionPassword: String!
   "Maximum session cookie age"
   maxSessionAge: Int!
+  "Inactivity timeout before an unrestricted session becomes restricted again"
+  restrictedSessionTimeout: Int!
   "Name of the log file"
   logFile: String
   "Whether to also output to stderr"
@@ -614,12 +622,14 @@ input StashConfigInput {
   path: String!
   excludeVideo: Boolean!
   excludeImage: Boolean!
+  restricted: Boolean!
 }
 
 type StashConfig {
   path: String!
   excludeVideo: Boolean!
   excludeImage: Boolean!
+  restricted: Boolean!
 }
 
 input GenerateAPIKeyInput {

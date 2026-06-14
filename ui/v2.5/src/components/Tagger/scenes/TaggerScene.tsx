@@ -211,7 +211,7 @@ export const TaggerScene: React.FC<PropsWithChildren<ITaggerScene>> = ({
 
   function onSpriteClick(ev: React.MouseEvent<HTMLElement>) {
     ev.preventDefault();
-    showLightboxImage(scene.paths.sprite ?? "");
+    showLightboxImage(scene.paths?.sprite ?? "");
   }
 
   function maybeRenderSpriteIcon() {
@@ -233,10 +233,10 @@ export const TaggerScene: React.FC<PropsWithChildren<ITaggerScene>> = ({
   function onScrubberClick(timestamp: number) {
     const link = queue
       ? queue.makeLink(scene.id, {
-          sceneIndex: index,
-          continue: cont,
-          start: timestamp,
-        })
+        sceneIndex: index,
+        continue: cont,
+        start: timestamp,
+      })
       : `/scenes/${scene.id}?t=${timestamp}`;
 
     history.push(link);
@@ -267,11 +267,11 @@ export const TaggerScene: React.FC<PropsWithChildren<ITaggerScene>> = ({
           <div className="scene-card mr-3">
             <Link to={url}>
               <ScenePreview
-                image={scene.paths.screenshot ?? undefined}
-                video={scene.paths.preview ?? undefined}
+                image={scene.paths?.screenshot ?? undefined}
+                video={scene.paths?.preview ?? undefined}
                 isPortrait={isPortrait}
                 soundActive={false}
-                vttPath={scene.paths.vtt ?? undefined}
+                vttPath={scene.paths?.vtt ?? undefined}
                 onScrubberClick={onScrubberClick}
               />
               <SceneSpecsOverlay scene={scene} />

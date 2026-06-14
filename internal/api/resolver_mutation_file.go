@@ -358,6 +358,10 @@ func (r *mutationResolver) RevealFileInFileManager(ctx context.Context, id strin
 		return false, err
 	}
 
+	if isPathBlockedInRestrictedMode(ctx, filePath) {
+		return false, fmt.Errorf("access denied")
+	}
+
 	if err := desktop.RevealInFileManager(filePath); err != nil {
 		return false, err
 	}
@@ -390,6 +394,10 @@ func (r *mutationResolver) RevealFolderInFileManager(ctx context.Context, id str
 		return nil
 	}); err != nil {
 		return false, err
+	}
+
+	if isPathBlockedInRestrictedMode(ctx, folderPath) {
+		return false, fmt.Errorf("access denied")
 	}
 
 	if err := desktop.RevealInFileManager(folderPath); err != nil {

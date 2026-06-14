@@ -38,10 +38,10 @@ const SceneCreate: React.FC = () => {
   useEffect(() => {
     async function fetchCoverImage() {
       const srcScene = data?.findScene;
-      if (srcScene?.paths.screenshot) {
+      if (srcScene?.paths?.screenshot) {
         setLoadingCoverImage(true);
         const imageData = await ImageUtils.imageToDataURL(
-          srcScene.paths.screenshot
+          srcScene.paths?.screenshot
         );
         setCoverImage(imageData);
         setLoadingCoverImage(false);

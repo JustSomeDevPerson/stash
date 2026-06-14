@@ -16,7 +16,7 @@ type Image {
 
   files: [ImageFile!]! @deprecated(reason: "Use visual_files")
   visual_files: [VisualFile!]!
-  paths: ImagePathsType! # Resolver
+  paths: ImagePathsType # Resolver
   galleries: [Gallery!]!
   studio: Studio
   tags: [Tag!]!

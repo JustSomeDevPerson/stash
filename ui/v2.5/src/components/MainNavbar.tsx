@@ -11,7 +11,7 @@ import {
   MessageDescriptor,
   useIntl,
 } from "react-intl";
-import { Nav, Navbar, Button } from "react-bootstrap";
+import { Nav, Navbar, Button, Form } from "react-bootstrap";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { LinkContainer } from "react-router-bootstrap";
 import { Link, NavLink, useLocation, useHistory } from "react-router-dom";
@@ -29,6 +29,8 @@ import {
   faHeart,
   faImage,
   faImages,
+  faLock,
+  faLockOpen,
   faMapMarkerAlt,
   faPlayCircle,
   faQuestionCircle,
@@ -40,6 +42,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { baseURL } from "src/core/createClient";
 import { PatchComponent } from "src/patch";
+import { useToast } from "src/hooks/Toast";
+import { ModalComponent } from "src/components/Shared/Modal";
 
 interface IMenuItem {
   name: string;
@@ -93,6 +97,47 @@ const messages = defineMessages({
   statistics: {
     id: "statistics",
     defaultMessage: "Statistics",
+  },
+  restrict: {
+    id: "actions.restrict_session",
+    defaultMessage: "Restrict",
+  },
+  unrestrict: {
+    id: "actions.unrestrict_session",
+    defaultMessage: "Unrestrict",
+  },
+  restrictedBadge: {
+    id: "session.restricted.badge",
+    defaultMessage: "Locked",
+  },
+  unrestrictedBadge: {
+    id: "session.unrestricted.badge",
+    defaultMessage: "Unlocked",
+  },
+  unrestrictModalTitle: {
+    id: "session.unrestrict.modal_title",
+    defaultMessage: "Unrestrict Session",
+  },
+  unrestrictModalDescription: {
+    id: "session.unrestrict.modal_description",
+    defaultMessage:
+      "Enter the restricted session password to access restricted paths.",
+  },
+  unrestrictPasswordLabel: {
+    id: "session.unrestrict.password_label",
+    defaultMessage: "Restricted Session Password",
+  },
+  restrictedSuccess: {
+    id: "toast.session_restricted",
+    defaultMessage: "Session restricted.",
+  },
+  unrestrictedSuccess: {
+    id: "toast.session_unrestricted",
+    defaultMessage: "Session unrestricted.",
+  },
+  restrictionUpdateError: {
+    id: "toast.session_restriction_update_failed",
+    defaultMessage: "Unable to update restricted mode right now.",
   },
 });
 
@@ -184,8 +229,13 @@ export const MainNavbar: React.FC = () => {
   const location = useLocation();
   const { configuration } = useConfigurationContext();
   const { openManual } = React.useContext(ManualStateContext);
+  const Toast = useToast();
 
   const [expanded, setExpanded] = useState(false);
+  const [isRestricted, setIsRestricted] = useState(true);
+  const [showUnrestrictModal, setShowUnrestrictModal] = useState(false);
+  const [unrestrictPassword, setUnrestrictPassword] = useState("");
+  const [isUpdatingRestriction, setIsUpdatingRestriction] = useState(false);
 
   // Show all menu items by default, unless config says otherwise
   const menuItems = useMemo(() => {
@@ -231,6 +281,24 @@ export const MainNavbar: React.FC = () => {
       document.removeEventListener("touchstart", maybeCollapse);
     };
   }, [expanded, maybeCollapse]);
+
+  useEffect(() => {
+    const loadRestriction = async () => {
+      try {
+        const response = await fetch(`${baseURL}session/restriction`);
+        if (!response.ok) {
+          return;
+        }
+
+        const result = await response.json();
+        setIsRestricted(!!result.restricted);
+      } catch {
+        // ignore transient polling errors
+      }
+    };
+
+    loadRestriction();
+  }, []);
 
   const goto = useCallback(
     (page: string) => {
@@ -291,6 +359,94 @@ export const MainNavbar: React.FC = () => {
     }
   }
 
+  const restrictSession = useCallback(async () => {
+    try {
+      const response = await fetch(`${baseURL}session/restrict`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        Toast.error(intl.formatMessage(messages.restrictionUpdateError));
+        return;
+      }
+
+      setIsRestricted(true);
+      Toast.success(intl.formatMessage(messages.restrictedSuccess));
+    } catch {
+      Toast.error(intl.formatMessage(messages.restrictionUpdateError));
+    }
+  }, [Toast, intl]);
+
+  const unrestrictSession = useCallback(async () => {
+    if (!unrestrictPassword) {
+      return;
+    }
+
+    setIsUpdatingRestriction(true);
+
+    try {
+      const response = await fetch(`${baseURL}session/unrestrict`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: unrestrictPassword }),
+      });
+
+      if (!response.ok) {
+        Toast.error(intl.formatMessage(messages.restrictionUpdateError));
+        return;
+      }
+
+      setIsRestricted(false);
+      setShowUnrestrictModal(false);
+      setUnrestrictPassword("");
+      Toast.success(intl.formatMessage(messages.unrestrictedSuccess));
+    } catch {
+      Toast.error(intl.formatMessage(messages.restrictionUpdateError));
+    } finally {
+      setIsUpdatingRestriction(false);
+    }
+  }, [Toast, intl, unrestrictPassword]);
+
+  const toggleRestriction = useCallback(async () => {
+    if (isRestricted) {
+      setShowUnrestrictModal(true);
+      return;
+    }
+
+    await restrictSession();
+  }, [isRestricted, restrictSession]);
+
+  function maybeRenderRestrictionToggle() {
+    return (
+      <Button
+        className="minimal d-flex align-items-center h-100"
+        onClick={toggleRestriction}
+        title={
+          isRestricted
+            ? intl.formatMessage(messages.unrestrict)
+            : intl.formatMessage(messages.restrict)
+        }
+      >
+        <Icon icon={isRestricted ? faLockOpen : faLock} />
+        <span className="d-none d-sm-inline ml-2">
+          {isRestricted
+            ? intl.formatMessage(messages.unrestrict)
+            : intl.formatMessage(messages.restrict)}
+        </span>
+        <span
+          className={`d-none d-md-inline ml-2 badge ${isRestricted ? "badge-warning" : "badge-success"
+            }`}
+        >
+          {isRestricted
+            ? intl.formatMessage(messages.restrictedBadge)
+            : intl.formatMessage(messages.unrestrictedBadge)}
+        </span>
+      </Button>
+    );
+  }
+
   const handleDismiss = useCallback(() => setExpanded(false), []);
 
   function renderUtilityButtons() {
@@ -340,74 +496,125 @@ export const MainNavbar: React.FC = () => {
         >
           <Icon icon={faQuestionCircle} />
         </Button>
+        {maybeRenderRestrictionToggle()}
         {maybeRenderLogout()}
       </>
     );
   }
 
   return (
-    <Navbar
-      collapseOnSelect
-      fixed="top"
-      variant="dark"
-      bg="dark"
-      className="top-nav"
-      expand="xl"
-      expanded={expanded}
-      onToggle={setExpanded}
-      ref={navbarRef}
-    >
-      <Navbar.Collapse className="bg-dark order-sm-1">
-        <MainNavbarMenuItems>
-          {menuItems.map(({ href, icon, message }) => (
-            <Nav.Link
-              eventKey={href}
-              as="div"
-              key={href}
-              className="col-4 col-sm-3 col-md-2 col-lg-auto"
-            >
-              <LinkContainer activeClassName="active" exact to={href}>
-                <Button className="minimal p-4 p-xl-2 d-flex d-xl-inline-block flex-column justify-content-between align-items-center">
-                  <Icon
-                    {...{ icon }}
-                    className="nav-menu-icon d-block d-xl-inline mb-2 mb-xl-0"
-                  />
-                  <span>{intl.formatMessage(message)}</span>
+    <>
+      <Navbar
+        collapseOnSelect
+        fixed="top"
+        variant="dark"
+        bg="dark"
+        className="top-nav"
+        expand="xl"
+        expanded={expanded}
+        onToggle={setExpanded}
+        ref={navbarRef}
+      >
+        <Navbar.Collapse className="bg-dark order-sm-1">
+          <MainNavbarMenuItems>
+            {menuItems.map(({ href, icon, message }) => (
+              <Nav.Link
+                eventKey={href}
+                as="div"
+                key={href}
+                className="col-4 col-sm-3 col-md-2 col-lg-auto"
+              >
+                <LinkContainer activeClassName="active" exact to={href}>
+                  <Button className="minimal p-4 p-xl-2 d-flex d-xl-inline-block flex-column justify-content-between align-items-center">
+                    <Icon
+                      {...{ icon }}
+                      className="nav-menu-icon d-block d-xl-inline mb-2 mb-xl-0"
+                    />
+                    <span>{intl.formatMessage(message)}</span>
+                  </Button>
+                </LinkContainer>
+              </Nav.Link>
+            ))}
+          </MainNavbarMenuItems>
+          <Nav>
+            <MainNavbarUtilityItems>
+              {renderUtilityButtons()}
+            </MainNavbarUtilityItems>
+          </Nav>
+        </Navbar.Collapse>
+
+        <Navbar.Brand as="div" onClick={handleDismiss}>
+          <Link to="/">
+            <Button className="minimal brand-link d-inline-block">Stash</Button>
+          </Link>
+        </Navbar.Brand>
+
+        <Nav className="navbar-buttons flex-row ml-auto order-xl-2">
+          {!!newPath && (
+            <div className="mr-2">
+              <Link to={newPath}>
+                <Button variant="primary" data-action="new">
+                  <FormattedMessage id="new" defaultMessage="New" />
                 </Button>
-              </LinkContainer>
-            </Nav.Link>
-          ))}
-        </MainNavbarMenuItems>
-        <Nav>
+              </Link>
+            </div>
+          )}
           <MainNavbarUtilityItems>
             {renderUtilityButtons()}
           </MainNavbarUtilityItems>
+          <Navbar.Toggle className="nav-menu-toggle ml-sm-2">
+            <Icon icon={expanded ? faTimes : faBars} />
+          </Navbar.Toggle>
         </Nav>
-      </Navbar.Collapse>
+      </Navbar>
 
-      <Navbar.Brand as="div" onClick={handleDismiss}>
-        <Link to="/">
-          <Button className="minimal brand-link d-inline-block">Stash</Button>
-        </Link>
-      </Navbar.Brand>
+      <ModalComponent
+        show={showUnrestrictModal}
+        onHide={() => {
+          if (isUpdatingRestriction) {
+            return;
+          }
 
-      <Nav className="navbar-buttons flex-row ml-auto order-xl-2">
-        {!!newPath && (
-          <div className="mr-2">
-            <Link to={newPath}>
-              <Button variant="primary" data-action="new">
-                <FormattedMessage id="new" defaultMessage="New" />
-              </Button>
-            </Link>
-          </div>
-        )}
-        <MainNavbarUtilityItems>
-          {renderUtilityButtons()}
-        </MainNavbarUtilityItems>
-        <Navbar.Toggle className="nav-menu-toggle ml-sm-2">
-          <Icon icon={expanded ? faTimes : faBars} />
-        </Navbar.Toggle>
-      </Nav>
-    </Navbar>
+          setShowUnrestrictModal(false);
+          setUnrestrictPassword("");
+        }}
+        header={intl.formatMessage(messages.unrestrictModalTitle)}
+        cancel={{
+          onClick: () => {
+            setShowUnrestrictModal(false);
+            setUnrestrictPassword("");
+          },
+        }}
+        accept={{
+          text: intl.formatMessage(messages.unrestrict),
+          onClick: () => {
+            void unrestrictSession();
+          },
+        }}
+        disabled={!unrestrictPassword}
+        isRunning={isUpdatingRestriction}
+      >
+        <p>{intl.formatMessage(messages.unrestrictModalDescription)}</p>
+        <Form.Group className="mb-0">
+          <Form.Label>
+            {intl.formatMessage(messages.unrestrictPasswordLabel)}
+          </Form.Label>
+          <Form.Control
+            autoFocus
+            type="password"
+            value={unrestrictPassword}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              setUnrestrictPassword(event.currentTarget.value)
+            }
+            onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
+              if (event.key === "Enter" && unrestrictPassword) {
+                event.preventDefault();
+                void unrestrictSession();
+              }
+            }}
+          />
+        </Form.Group>
+      </ModalComponent>
+    </>
   );
 };
